@@ -6,8 +6,19 @@ struct Song
 
 	string title;
 	string artist;
-	int totalVotes;
 	int roundVotes;
 	int ranking;
+	bool loser;
+
+	Song();
 
 };
+
+Song::Song()
+{
+
+	roundVotes = 0;
+	ranking = 0;
+	loser = false;
+
+}
