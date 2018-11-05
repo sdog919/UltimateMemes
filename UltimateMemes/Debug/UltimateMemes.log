@@ -1,2 +1,3 @@
 ﻿  Source.cpp
-  UltimateMemes.vcxproj -> C:\Users\Shane\source\repos\UltimateMemes\Debug\UltimateMemes.exe
+c:\users\apoll\onedrive\documents\github\ultimatememes\ultimatememes\source.cpp(67): warning C4018: '<': signed/unsigned mismatch
+  UltimateMemes.vcxproj -> C:\Users\apoll\OneDrive\Documents\GitHub\UltimateMemes\Debug\UltimateMemes.exe

@@ -5,10 +5,7 @@ struct Song
 {
 
 	string title;
-	string artist;
-	int roundVotes;
-	int ranking;
-	bool loser;
+	int votes;
 
 	Song();
 
@@ -17,8 +14,6 @@ struct Song
 Song::Song()
 {
 
-	roundVotes = 0;
-	ranking = 0;
-	loser = false;
+	votes = 0;
 
 }

@@ -2,21 +2,17 @@
 #include "Song.h"
 #include <fstream>
 #include <string>
-#include <array>
+#include <vector>
 using namespace std;
 
 Song** createBracket(Song* songArr, int arrLength, int roundSize, int rounds, bool uneven);
 void printBrackets(Song** brackets, int roundSize, int rounds, bool uneven);
-void updateStorage(Song**, int, int, int, bool);
 
 int main()
 {
 
 	string title_;
-	string artist_;
-	string rank;
-	string loser;
-	ifstream inSongs("storage.txt", ios_base::beg);
+	ifstream inSongs("songNames.txt", ios_base::beg);
 
 	int count;
 	int rsize;
@@ -38,15 +34,6 @@ int main()
 		getline(inSongs, title_);
 		songs[i].title = title_;
 
-		getline(inSongs, artist_);
-		songs[i].artist = artist_;
-
-		getline(inSongs, rank);
-		songs[i].ranking = stoi(rank);
-
-		getline(inSongs, loser);
-		songs[i].loser = (bool)stoi(loser);
-
 	}
 
 	cout << "Songs sorted" << endl;
@@ -63,65 +50,146 @@ int main()
 	Song** brackets = createBracket(songs, count, rsize, rounds, uneven);
 	cout << "Brackets created" << endl;
 
-	updateStorage(brackets, count, rsize, rounds, uneven);
-
 	cout << endl;
 
-	int option;
-	cout << "What would you like to do?" << endl;
-	cout << "1. Print Brackets" << endl;
-	cout << "2. Report Votes" << endl;
-	cin >> option;
+	ifstream inVotes("winners.tsv", ios_base::beg);
 
-	if(option == 1)
-		printBrackets(brackets, rsize, rounds, uneven);
+	string str;
+	vector<string> strings;
 
-	if (option == 2)
+	while (getline(inVotes, str))
 	{
 
-		cout << "Which bracket are you entering results for?" << endl;
+		strings.push_back(str);
 
-		int bracketNum;
-		cout << "Bracket: ";
-		cin >> bracketNum;
-		cout << endl;
+	}
 
-		if (uneven && (bracketNum == rounds - 1))
+	for (int i = 0; i < strings.size(); i++)
+	{
+
+		for (int j = 0; j < count; j++)
 		{
 
-			for (int j = 0; j < count % rsize; j++)
-			{
-
-				cout << '\t';
-				cout << j + 1 << ". " << brackets[bracketNum][j].title << " -- " << brackets[bracketNum][j].artist << endl;
-
-			}
-
-			cout << endl;
-
-		}
-		else
-		{
-
-			for (int j = 0; j < rsize; j++)
-			{
-
-				cout << '\t';
-				cout << j + 1 << ". " << brackets[bracketNum][j].title << " -- " << brackets[bracketNum][j].artist << endl;
-
-			}
-
-			cout << endl;
+			if (strings[i].find(songs[j].title) != string::npos)
+				songs[j].votes += 1;
 
 		}
 
-		cout << endl;
-		cout << "Which songs won?" << endl;
+	}
 
-		int song1, song2, song3;
-		cin >> song1 >> song2 >> song3;
+	brackets = createBracket(songs, count, rsize, rounds, uneven);
 
-		cout << endl;
+	cout << "Votes Tallied" << endl;
+
+	float avgVote = 0;
+	for (int i = 0; i < count; i++)
+	{
+
+		avgVote += songs[i].votes;
+
+	}
+
+	avgVote = avgVote / count;
+
+	cout << "Average Vote Per Song: " << avgVote << endl;
+
+	int option;
+	bool stop = false;
+
+	while (!stop)
+	{
+
+		cout << "What would you like to do?" << endl;
+		cout << "1. Print Brackets" << endl;
+		cout << "2. Construct final bracket" << endl;
+		cout << "3. Search Song" << endl;
+		cout << "4. Sort and Print" << endl;
+		cin >> option;
+
+		if (option == 1)
+			printBrackets(brackets, rsize, rounds, uneven);
+
+		if (option == 2)
+		{
+
+			int victoryCount = 0;
+
+			int t;
+			cout << "Threshold: ";
+			cin >> t;
+			cout << "Threshold: " << t << " votes!" << endl;
+
+			for (int i = 0; i < count; i++)
+			{
+
+				if (songs[i].votes >= t)
+				{
+					victoryCount++;
+					cout << songs[i].title << endl;
+				}
+
+			}
+
+			cout << "Songs on Final Ballot: " << victoryCount << endl;
+
+		}
+
+		if (option == 3)
+		{
+
+			cout << "Enter Search Query: ";
+			string search;
+			cin >> search;
+			int count_ = 1;
+
+			for (int i = 0; i < count; i++)
+			{
+
+				if (songs[i].title.find(search) != string::npos)
+				{
+					cout << count_ << ". " << songs[i].title << " --- Votes: " << songs[i].votes << endl;
+					count_++;
+				}
+
+			}
+
+		}
+
+		if (option == 4)
+		{
+
+			//Insertion sort
+			for (int i = 1; i < count; i++)
+			{
+
+				int j = i; // Goes through the whole list sorting value by value
+
+				while (j > 0 && songs[j].votes > songs[j - 1].votes) // Continues until colors[j] is alphabetically smaller than the name before it or until it is in front of the list (aka properly sorted)
+				{
+
+					Song temp = songs[j];
+					songs[j] = songs[j - 1];
+					songs[j - 1] = temp;
+					j--;
+
+				}
+
+			}
+
+			for (int i = 0; i < count; i++)
+			{
+
+				cout << i + 1 << ". " << songs[i].title << "  ---  Votes: " << songs[i].votes << endl;
+
+			}
+
+		}
+
+		cout << "Exit?" << endl;
+
+		char ans;
+		cin >> ans;
+		if (ans == 'y') stop = true;
 
 	}
 
@@ -221,7 +289,7 @@ void printBrackets(Song** brackets, int roundSize, int rounds, bool uneven)
 		{
 
 			cout << '\t';
-			cout << j + 1 << ". " << brackets[i][j].title << " -- " << brackets[i][j].artist << " --- Ranking: " << brackets[i][j].ranking << endl;
+			cout << j + 1 << ". " << brackets[i][j].title << " --- Votes: " << brackets[i][j].votes << endl;
 
 		}
 
@@ -238,7 +306,7 @@ void printBrackets(Song** brackets, int roundSize, int rounds, bool uneven)
 		{
 
 			cout << '\t';
-			cout << j + 1 << ". " << brackets[rounds-1][j].title << " -- " << brackets[rounds-1][j].artist << " --- Ranking: " << brackets[rounds - 1][j].ranking << endl;
+			cout << j + 1 << ". " << brackets[rounds-1][j].title << " --- Votes: " << brackets[rounds - 1][j].votes << endl;
 
 		}
 
@@ -250,63 +318,12 @@ void printBrackets(Song** brackets, int roundSize, int rounds, bool uneven)
 		{
 
 			cout << '\t';
-			cout << j + 1 << ". " << brackets[rounds-1][j].title << " -- " << brackets[rounds-1][j].artist << " --- Ranking: " << brackets[rounds - 1][j].ranking << endl;
+			cout << j + 1 << ". " << brackets[rounds-1][j].title << " --- Votes: " << brackets[rounds - 1][j].votes << endl;
 
 		}
 
 	}
 
 	cout << endl;
-
-}
-
-void updateStorage(Song** brackets, int count, int rsize, int rounds, bool uneven)
-{
-
-	ofstream storageFile("storage.txt", ios_base::beg);
-
-	for (int i = 0; i < rounds - 1; i++)
-	{
-
-		for (int j = 0; j < rsize; j++)
-		{
-
-			storageFile << brackets[i][j].title << endl;
-			storageFile << brackets[i][j].artist << endl;
-			storageFile << brackets[i][j].ranking << endl;
-			storageFile << brackets[i][j].loser << endl;
-
-		}
-
-	}
-
-	if (uneven)
-	{
-
-		for (int j = 0; j < count % rsize; j++)
-		{
-
-			storageFile << brackets[rounds-1][j].title << endl;
-			storageFile << brackets[rounds-1][j].artist << endl;
-			storageFile << brackets[rounds-1][j].ranking << endl;
-			storageFile << brackets[rounds-1][j].loser << endl;
-
-		}
-
-	}
-	else
-	{
-
-		for (int j = 0; j < rsize; j++)
-		{
-
-			storageFile << brackets[rounds-1][j].title << endl;
-			storageFile << brackets[rounds-1][j].artist << endl;
-			storageFile << brackets[rounds - 1][j].ranking << endl;
-			storageFile << brackets[rounds - 1][j].loser << endl;
-
-		}
-
-	}
 
 }
